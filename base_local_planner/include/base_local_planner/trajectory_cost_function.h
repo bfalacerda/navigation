@@ -39,6 +39,7 @@
 #define TRAJECTORYCOSTFUNCTION_H_
 
 #include <base_local_planner/trajectory.h>
+#include <iostream>
 
 namespace base_local_planner {
 
@@ -73,7 +74,9 @@ public:
   }
 
   virtual ~TrajectoryCostFunction() {}
-
+  
+  std::string name;
+  
 protected:
   TrajectoryCostFunction(double scale = 1.0): scale_(scale) {}
 

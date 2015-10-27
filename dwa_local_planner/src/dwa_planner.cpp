@@ -151,7 +151,7 @@ namespace dwa_local_planner {
     obstacle_costs_.setSumScores(sum_scores);
 
 
-    private_nh.param("publish_cost_grid_pc", publish_cost_grid_pc_, false);
+    private_nh.param("publish_cost_grid_pc", publish_cost_grid_pc_, true);
     map_viz_.initialize(name, planner_util->getGlobalFrame(), boost::bind(&DWAPlanner::getCellCosts, this, _1, _2, _3, _4, _5, _6));
 
     std::string frame_id;
@@ -160,17 +160,24 @@ namespace dwa_local_planner {
     traj_cloud_ = new pcl::PointCloud<base_local_planner::MapGridCostPoint>;
     traj_cloud_->header.frame_id = frame_id;
     traj_cloud_pub_.advertise(private_nh, "trajectory_cloud", 1);
-    private_nh.param("publish_traj_pc", publish_traj_pc_, false);
+    private_nh.param("publish_traj_pc", publish_traj_pc_, true);
 
     // set up all the cost functions that will be applied in order
     // (any function returning negative values will abort scoring, so the order can improve performance)
     std::vector<base_local_planner::TrajectoryCostFunction*> critics;
+   
     critics.push_back(&oscillation_costs_); // discards oscillating motions (assisgns cost -1)
+    critics.back()->name = "Oscillation";
     critics.push_back(&obstacle_costs_); // discards trajectories that move into obstacles
+    critics.back()->name = "ObstacleCosts";
     critics.push_back(&goal_front_costs_); // prefers trajectories that make the nose go towards (local) nose goal
+    critics.back()->name = "GoalFrontCosts";
     critics.push_back(&alignment_costs_); // prefers trajectories that keep the robot nose on nose path
+    critics.back()->name = "AlignmentCosts";
     critics.push_back(&path_costs_); // prefers trajectories on global path
+    critics.back()->name = "PathCosts";
     critics.push_back(&goal_costs_); // prefers trajectories that go towards (local) goal, based on wave propagation
+    critics.back()->name = "GoalCosts";
 
     // trajectory generators
     std::vector<base_local_planner::TrajectorySampleGenerator*> generator_list;
@@ -294,6 +301,7 @@ namespace dwa_local_planner {
       tf::Stamped<tf::Pose> global_vel,
       tf::Stamped<tf::Pose>& drive_velocities,
       std::vector<geometry_msgs::Point> footprint_spec) {
+      std::cout << "findBestPath" << std::endl;
 
     obstacle_costs_.setFootprint(footprint_spec);
 
@@ -312,8 +320,12 @@ namespace dwa_local_planner {
         goal,
         &limits,
         vsamples_);
-
-    result_traj_.cost_ = -7;
+    
+    result_traj_.xv_ = 0.0; 
+    result_traj_.yv_ = 0.0; 
+    result_traj_.thetav_ = 0.0;
+    result_traj_.time_delta_ = 0.0;
+    result_traj_.cost_ = -2000;
     // find best trajectory by sampling and scoring the samples
     std::vector<base_local_planner::Trajectory> all_explored;
     scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
@@ -367,6 +379,17 @@ namespace dwa_local_planner {
       drive_velocities.setBasis(matrix);
     }
 
+    std::cout << "############# trajectory: \n" << result_traj_.xv_ << " " << result_traj_.yv_ << " " 
+    << result_traj_.thetav_ << " " << result_traj_.cost_ <<  " " << result_traj_.time_delta_ << std::endl;
+//     std::cout << "---- path: \n";
+//     for(unsigned int i = 0; i < result_traj_.getPointsSize(); ++i) {
+//         double p_x, p_y, p_th;
+//         result_traj_.getPoint(i, p_x, p_y, p_th);
+//         std::cout << "\n* " << p_x << " " << p_y << " " << p_th;
+//     }
+//     std::cout << "---- path" << std::endl;
+    
     return result_traj_;
+    
   }
 };

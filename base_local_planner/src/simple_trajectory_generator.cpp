@@ -34,7 +34,7 @@
  *
  * Author: TKruse
  *********************************************************************/
-
+#include <iostream>
 #include <base_local_planner/simple_trajectory_generator.h>
 
 #include <cmath>
@@ -187,15 +187,18 @@ bool SimpleTrajectoryGenerator::generateTrajectory(
   traj.cost_   = -1.0; // placed here in case we return early
   //trajectory might be reused so we'll make sure to reset it
   traj.resetPoints();
-
+//   std::cout << "Trying to generate traj " << std::endl;
+  
   // make sure that the robot would at least be moving with one of
   // the required minimum velocities for translation and rotation (if set)
   if ((limits_->min_trans_vel >= 0 && vmag + eps < limits_->min_trans_vel) &&
       (limits_->min_rot_vel >= 0 && fabs(sample_target_vel[2]) + eps < limits_->min_rot_vel)) {
+//       std::cout << "FALSE!!!!" << std::endl;
     return false;
   }
   // make sure we do not exceed max diagonal (x+y) translational velocity (if set)
   if (limits_->max_trans_vel >=0 && vmag - eps > limits_->max_trans_vel) {
+//     std::cout << "FALSE222222!!!!" << std::endl;
     return false;
   }
 
@@ -246,7 +249,7 @@ bool SimpleTrajectoryGenerator::generateTrajectory(
     pos = computeNewPositions(pos, loop_vel, dt);
 
   } // end for simulation steps
-
+//   std::cout << "Trajectory generated wuth " << num_steps << " steps, x " << traj.xv_ << " theta " << traj.thetav_ << std::endl;
   return num_steps > 0; // true if trajectory has at least one point
 }
 

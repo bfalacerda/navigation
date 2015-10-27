@@ -164,13 +164,18 @@ bool OscillationCostFunction::setOscillationFlags(base_local_planner::Trajectory
 }
 
 double OscillationCostFunction::scoreTrajectory(Trajectory &traj) {
-  if ((forward_pos_only_ && traj.xv_ < 0.0) ||
-      (forward_neg_only_ && traj.xv_ > 0.0) ||
-      (strafe_pos_only_  && traj.yv_ < 0.0) ||
-      (strafe_neg_only_  && traj.yv_ > 0.0) ||
-      (rot_pos_only_     && traj.thetav_ < 0.0) ||
-      (rot_neg_only_     && traj.thetav_ > 0.0)) {
-    return -5.0;
+  if (forward_pos_only_ && traj.xv_ < 0.0)
+      return -10.0;
+  if (forward_neg_only_ && traj.xv_ > 0.0) 
+      return -11.0;
+  if (strafe_pos_only_  && traj.yv_ < 0.0)
+      return -12.0;
+  if (strafe_neg_only_  && traj.yv_ > 0.0)
+      return -13.0;
+  if (rot_pos_only_     && traj.thetav_ < 0.2)
+      return -14.0;
+  if (rot_neg_only_     && traj.thetav_ > -0.2) {
+    return -15.0;
   }
   return 0.0;
 }
